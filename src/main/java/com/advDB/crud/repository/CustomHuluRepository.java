@@ -10,6 +10,6 @@ import com.advDB.crud.model.HuluEntity;
 public interface CustomHuluRepository {
 
   public void updateMovieDetails(HuluEntity huluEntity,String title);
-  public void deleteByTitle(String title);
+  public String deleteByTitle(String title);
 
 }

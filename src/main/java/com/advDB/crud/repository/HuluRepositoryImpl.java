@@ -30,9 +30,10 @@ public class HuluRepositoryImpl implements CustomHuluRepository {
     mongoTemplate.updateFirst(query, update, HuluEntity.class);
   }
 
-  public void deleteByTitle(String title){
+  public String  deleteByTitle(String title){
     Query query= new Query();
     query.addCriteria(Criteria.where("title").is(title));
      mongoTemplate.findAndRemove(query, HuluEntity.class);
+     return "Deleted successfully";
   }
 }

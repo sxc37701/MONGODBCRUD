@@ -2,14 +2,16 @@ package com.advDB.crud.controller;
 
 import com.advDB.crud.dto.HuluDto;
 import com.advDB.crud.dto.HuluUpdateDto;
-import com.advDB.crud.model.HuluEntity;
-import com.advDB.crud.repository.HuluRepository;
+import com.advDB.crud.service.HuluService;
 import java.util.Collections;
 import java.util.List;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -27,57 +29,85 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class HuluRestController {
   @Autowired
-  private HuluRepository huluRepository;
-
+  private HuluService huluService;
   /*
    4.	Retrieve all the movies and shows in database.
    */
   @GetMapping("/api")
-  public List<HuluEntity> getAllHuluShows() {
+  public ResponseEntity getAllHuluShows() {
     log.info("Fetching all movies and shows.....");
-    return huluRepository.findAll();
+    try{
+    return new ResponseEntity(huluService.fetchAllshows(), HttpStatus.OK);
+    }catch (Exception exc){
+      return new ResponseEntity(exc.getMessage(), HttpStatus.CONFLICT);
+    }
   }
 
   /*
    5.	Display the movie and show’s detail using title.
    */
   @GetMapping("/api/{title}")
-  public List<HuluEntity> getHuluShowsByTitle(@PathVariable(required = true) String title) {
+  public ResponseEntity getHuluShowsByTitle(@PathVariable(required = true) String title) {
     log.info("Fetching movies and shows by title : "+title);
+    try{
     if(StringUtils.isNotBlank(title))
-       return huluRepository.findByTitle(title);
-    else return Collections.emptyList();
+       return new ResponseEntity(huluService.fetchByTitle(title),HttpStatus.OK);
+    else return new ResponseEntity<>(Collections.emptyList(),HttpStatus.NO_CONTENT);
+    }catch (Exception exc){
+      return new ResponseEntity(exc.getMessage(), HttpStatus.CONFLICT);
+    }
   }
 
   /*
    3.	Delete the movie and show information using title.
    */
   @DeleteMapping("/api/{title}")
-  public void deleteByTitle(@PathVariable(required = true) String title) {
+  public ResponseEntity deleteByTitle(@PathVariable(required = true) String title) {
     log.info("Deleting movies and shows by title : "+title);
-     huluRepository.deleteByTitle(title);
+    try{
+        huluService.deleteByTitle(title);
+        return new ResponseEntity<>("Hulu Movie and Show deleted successfully",HttpStatus.OK);
+       }catch (Exception exc){
+      return new ResponseEntity(exc.getMessage(), HttpStatus.CONFLICT);
+    }
   }
 
   /*
     2.Update the movie and show information using title. (By update only id, title, description, score, and rating)
   */
   @PatchMapping("/api/{title}")
-  public void updateByTitle(@PathVariable(required = true) String title,@RequestBody(required = true) HuluUpdateDto huluUpdateDto) {
+  public ResponseEntity updateByTitle(@PathVariable(required = true) String title,@RequestBody(required = true) HuluUpdateDto huluUpdateDto) {
     log.info("Updating id,title,description,score,rating of movies and shows by title : "+huluUpdateDto.getScore());
-    HuluEntity huluEntityObject = new HuluEntity();
-    BeanUtils.copyProperties(huluUpdateDto,huluEntityObject);
-    huluRepository.updateMovieDetails(huluEntityObject,title);
+    try{
+      if(!ObjectUtils.isEmpty(huluUpdateDto) && StringUtils.isNotBlank(title)){
+        huluService.updateByTitle(huluUpdateDto,title);
+        return new ResponseEntity<>("Hulu details updated successfully...",HttpStatus.OK);
+        }
+      else
+        return new ResponseEntity<>("Error occurred while updating...",HttpStatus.CONFLICT);
+        }catch (Exception exc){
+      return new ResponseEntity<>(exc.getMessage(),HttpStatus.CONFLICT);
+    }
   }
 
   /*
     1.	Insert the new movie and show.
    */
   @PostMapping("/api")
-  public void insertMovieAndShow(@RequestBody HuluDto huluObject) {
-    log.info("Inserting Hulu movie and show : "+huluObject.getTitle());
-    HuluEntity huluEntityObject = new HuluEntity();
-    BeanUtils.copyProperties(huluObject,huluEntityObject);
-    huluRepository.insert(huluEntityObject);
+  public ResponseEntity insertMovieAndShow(@RequestBody List<HuluDto> huluObjectList) {
+    try{
+    if(!CollectionUtils.isEmpty(huluObjectList)){
+      log.info("Inserting Hulu movie and show : "+huluObjectList.size());
+      try{
+          huluService.insertMovieAndShow(huluObjectList);
+          return new ResponseEntity("Hulu movie/shows inserted successfully",HttpStatus.OK);
+          }catch(Exception exc){
+        return new ResponseEntity<>(exc.getMessage(),HttpStatus.CONFLICT);
+      }
+    }else
+      return new ResponseEntity<>("Empty hulu data cannot be inserted...",HttpStatus.BAD_REQUEST);
+     }catch(Exception exc){
+      return new ResponseEntity<>(exc.getMessage(),HttpStatus.CONFLICT);
+    }
   }
-
 }
