@@ -1,7 +1,5 @@
 package com.advDB.crud.dto;
 
-import java.util.Date;
-import java.util.List;
 import lombok.Data;
 
 /**
@@ -10,7 +8,7 @@ import lombok.Data;
  */
 @Data
 public class HuluUpdateDto {
-  //private int id;
+  private String title;
   private String description;
   private double score;
   private String rating;

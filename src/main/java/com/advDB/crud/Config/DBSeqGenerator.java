@@ -5,11 +5,8 @@ import java.util.Objects;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 
 /**
@@ -23,7 +20,6 @@ public class DBSeqGenerator {
   private MongoTemplate mongoTemplate;
 
   public int getNextSequence() {
-    // get the sequence number
     final Query q = new Query();
     q.limit(1);
     q.with(Sort.by(Direction.DESC,"id"));
