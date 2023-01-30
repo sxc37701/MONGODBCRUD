@@ -2,7 +2,9 @@ package com.advDB.crud.controller;
 
 import com.advDB.crud.dto.HuluDto;
 import com.advDB.crud.dto.HuluUpdateDto;
+import com.advDB.crud.model.HuluEntity;
 import com.advDB.crud.service.HuluService;
+import com.mongodb.client.result.UpdateResult;
 import java.util.Collections;
 import java.util.List;
 import lombok.extern.log4j.Log4j2;
@@ -65,8 +67,8 @@ public class HuluRestController {
   public ResponseEntity deleteByTitle(@PathVariable(required = true) String title) {
     log.info("Deleting movies and shows by title : "+title);
     try{
-        huluService.deleteByTitle(title);
-        return new ResponseEntity<>("Hulu Movie and Show deleted successfully",HttpStatus.OK);
+        String delStatus = huluService.deleteByTitle(title);
+        return new ResponseEntity<>(delStatus,HttpStatus.OK);
        }catch (Exception exc){
       return new ResponseEntity(exc.getMessage(), HttpStatus.CONFLICT);
     }
@@ -80,7 +82,10 @@ public class HuluRestController {
     log.info("Updating id,title,description,score,rating of movies and shows by title : "+huluUpdateDto.getScore());
     try{
       if(!ObjectUtils.isEmpty(huluUpdateDto) && StringUtils.isNotBlank(title)){
-        huluService.updateByTitle(huluUpdateDto,title);
+        UpdateResult updateResult = huluService.updateByTitle(huluUpdateDto,title);
+        if(updateResult.getModifiedCount() == 0)
+          return new ResponseEntity<>("No document found to update",HttpStatus.OK);
+          else
         return new ResponseEntity<>("Hulu details updated successfully...",HttpStatus.OK);
         }
       else
@@ -99,8 +104,11 @@ public class HuluRestController {
     if(!CollectionUtils.isEmpty(huluObjectList)){
       log.info("Inserting Hulu movie and show : "+huluObjectList.size());
       try{
-          huluService.insertMovieAndShow(huluObjectList);
+        List<HuluEntity> huluInsertionList_result = huluService.insertMovieAndShow(huluObjectList);
+        if(!CollectionUtils.isEmpty(huluInsertionList_result) && huluInsertionList_result.size()>0)
           return new ResponseEntity("Hulu movie/shows inserted successfully",HttpStatus.OK);
+        else
+          return new ResponseEntity("No documents inserted",HttpStatus.OK);
           }catch(Exception exc){
         return new ResponseEntity<>(exc.getMessage(),HttpStatus.CONFLICT);
       }
